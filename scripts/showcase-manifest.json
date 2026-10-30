@@ -1,0 +1,92 @@
+[
+  {
+    "id": "greek-amphora",
+    "metObjectId": 254947,
+    "hypotheses": [
+      {
+        "id": "hyp-1",
+        "prompt": "Reconstruct these surviving Archaic Greek Attic black-figure terracotta amphora fragments (showing a bearded boxer with leather-bound fists) into a complete, intact Attic Type B belly-amphora (ca. 530 BCE). Preserve the warm orange-red Attic clay panel and glossy black slip with incised anatomical detail. Complete the central panel showing the surviving bearded boxer facing an opposing Greek boxer, framed by traditional lotus-bud and palmette borders, twin arching black-glazed handles, flaring echinus mouth, and spreading foot."
+      },
+      {
+        "id": "hyp-2",
+        "prompt": "Reconstruct these surviving Attic black-figure boxer sherds into a complete Panathenaic-shape neck-amphora (ca. 525 BCE, comparable to Antimenes Painter vessels). Retain the bearded boxer with leather thongs on his raised hands confronting a rival pugilist on the warm terracotta body panel, adding an offset neck decorated with alternating lotus-palmette chain, twin cylindrical handles, and a compact torus foot."
+      },
+      {
+        "id": "hyp-3",
+        "prompt": "Reconstruct these surviving Attic black-figure terracotta amphora fragments into a complete two-handled Greek amphora (ca. 530 BCE) where the surviving bearded boxer faces his opponent while a robed paidotribes (athletic trainer/referee) stands at the right margin holding a forked rhabdos rod, with tongue pattern on the shoulder and rays above the foot."
+      }
+    ]
+  },
+  {
+    "id": "marble-eirene",
+    "metObjectId": 247173,
+    "hypotheses": [
+      {
+        "id": "hyp-1",
+        "prompt": "Reconstruct this headless and armless Roman marble statue of Eirene (Peace) into its complete classical white Pentelic marble form (modeled on Kephisodotos the Elder's monument and the Munich Eirene parallel). Preserve the exact heavy vertical folds of her Doric peplos and overfold, seamlessly restoring her gently inclined classical female head with braided hair fillet, her left forearm cradling the small draped infant Ploutos (Wealth) reaching toward her chin, and her raised right arm holding a slender classical scepter."
+      },
+      {
+        "id": "hyp-2",
+        "prompt": "Reconstruct this fragmentary ancient marble statue of Eirene (goddess of Peace) into its complete Greco-Roman polychrome marble museum sculpture appearance: preserve the surviving heavy Doric peplos drapery folds, restore her serene classical head with braided hair fillet, her left forearm cradling a richly carved cornucopia (horn of plenty) overflowing with pomegranates and wheat ears, and her raised right arm holding a slender scepter, with subtle ancient mineral polychromy—ochre-gilded garment hem meander border and warm ivory-polished marble."
+      },
+      {
+        "id": "hyp-3",
+        "prompt": "Reconstruct this damaged classical statue of Eirene (goddess of Peace) as a complete ancient Greek bronze civic monument evoking Kephisodotos's ca. 375 BCE Athenian Agora prototype: preserve the exact peplos drapery fold geometry and contrapposto stance while restoring her serene classical head with diadem, her left arm supporting an abundant sculpted cornucopia of fruits and grain, and her raised right hand holding a tall bronze scepter, rendered in warm antique patinated bronze."
+      }
+    ]
+  },
+  {
+    "id": "egyptian-queen",
+    "metObjectId": 544514,
+    "hypotheses": [
+      {
+        "id": "hyp-1",
+        "prompt": "Reconstruct this famous Amarna yellow jasper fragment of a Queen's lower face into a complete Ancient Egyptian 18th Dynasty composite royal portrait bust (Queen Nefertiti hypothesis, ca. 1353–1336 BCE). Preserve the exact warm polished honey-yellow jasper chin, full sensuous lips, philtrum, and throat; seamlessly complete the upper nose, high cheekbones, and inlaid almond-shaped eyes with dark kohl rims, crowned by the tall flat-topped lapis-blue royal cap crown encircled by a gold ribbon diadem and rearing gold cobra uraeus, resting on a pleated white travertine-alabaster royal collar."
+      },
+      {
+        "id": "hyp-2",
+        "prompt": "Reconstruct this Amarna yellow jasper fragment of a Queen's face into a complete composite royal bust representing Queen Tiye (ca. 1353 BCE, informed by the Berlin Gurob head). Retain the exact polished yellow jasper lips, chin, and lower cheeks; restore the upper face with inlaid quartz and obsidian eyes, framed by an enveloping dark blue-and-gold striped khat royal headcloth with gold uraeus cobra at the brow and a broad beaded gold and carnelian wesekh collar."
+      },
+      {
+        "id": "hyp-3",
+        "prompt": "Reconstruct this Amarna yellow jasper fragment of a Queen's face into a complete composite Egyptian bust under the Royal Wife Kiya hypothesis (ca. 1345 BCE). Preserve the warm luminous yellow jasper mouth, chin, and neck; restore the nose and inlaid eyes framed by a finelytiered dark ebonized Nubian curl wig with side-lock ornament and a white Egyptian alabaster pleated shawl."
+      }
+    ]
+  },
+  {
+    "id": "persepolis-bull",
+    "metObjectId": 324025,
+    "hypotheses": [
+      {
+        "id": "hyp-1",
+        "prompt": "Reconstruct this fragmentary Achaemenid Persian limestone bull's head from a Persepolis column capital (Met 47.100.83, ca. 5th century BCE) into a complete royal bull protome sculpture with burnished gold-leaf horns, carved fluted stone ears, gilded lotus-and-rosette neck collar, and muscular kneeling forelegs tucked beneath the chest."
+      },
+      {
+        "id": "hyp-2",
+        "prompt": "Reconstruct this fragmentary Achaemenid Persepolis bull capital head with archaeometrically documented ancient Persian palace polychromy: Egyptian-blue spiral forehead and neck curls, cinnabar-red eyelids and nostrils, polychrome twelve-petal rosette collar, hammered gold-leaf horns, and kneeling stone forelegs."
+      },
+      {
+        "id": "hyp-3",
+        "prompt": "Reconstruct this fragmentary Persepolis bull's head into a complete symmetrical addorsed double-bull architectural column capital with twin back-to-back horned bull protomes, central roof-beam saddle impost, four gilded horns, rosette collars, and folded forelegs."
+      }
+    ]
+  },
+  {
+    "id": "teotihuacan-mask",
+    "metObjectId": 312736,
+    "hypotheses": [
+      {
+        "id": "hyp-1",
+        "prompt": "Reconstruct this Classic Teotihuacan greenstone funerary mask (ca. 250–650 CE) with its complete original Mesoamerican composite inlays and ear ornaments. Preserve the exact carved dark mottled chlorite-schist greenstone face, straight brow, triangular nose, parted lips, and rectangular ear flanges; restore luminous white marine shell sclerae and polished black obsidian circular irises inside the recessed eye sockets, carved white shell dental inlays inside the parted mouth, and a pair of polished jadeite circular earflare spools suspended from the pierced earlobes."
+      },
+      {
+        "id": "hyp-2",
+        "prompt": "Reconstruct this Classic Teotihuacan greenstone mask following the mosaic-inlaid funerary tradition (comparable to the Malinaltepec mask): preserve the exact symmetrical Teotihuacan stone facial geometry while restoring inlaid white Spondylus shell and reflective iron-pyrite eyes, white shell teeth, jadeite earflares, and geometric turquoise and coral-red shell tesserae mosaic bands across the cheeks and forehead."
+      },
+      {
+        "id": "hyp-3",
+        "prompt": "Reconstruct this Classic Teotihuacan greenstone mask as an adorned mortuary bundle effigy face: retain the polished dark forest-green stone face, restore nacreous white shell and dark obsidian inlaid eyes and shell teeth, add suspended greenstone earspools with jade beads, and apply subtle sacred red cinnabar mineral pigment within the engraved mouth contour and ear incisions."
+      }
+    ]
+  }
+]
