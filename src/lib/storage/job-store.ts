@@ -1,11 +1,15 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 import type { RestorationJob } from "@/types/artifact";
 import { optimizeGlbBuffer } from "@/lib/tripo/optimize-glb";
 
-const JOBS_ROOT = path.join(process.cwd(), "tmp-jobs");
+const JOBS_ROOT =
+  process.env.NODE_ENV === "production"
+    ? path.join(os.tmpdir(), "relic-tmp-jobs")
+    : path.join(process.cwd(), "tmp-jobs");
 const JOB_TTL_MS = 3 * 60 * 60 * 1000; // 3 hours cleanup TTL
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // 15 MB
 
@@ -13,8 +17,22 @@ const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 interface StoredJobMeta {
   ownerSessionId: string;
+  updatedAtMs: number;
   job: RestorationJob;
 }
+
+const globalForJobs = globalThis as unknown as {
+  __relicMemoryJobs?: Map<string, StoredJobMeta>;
+  __relicMemoryAssets?: Map<string, Buffer>;
+};
+
+const memoryJobs =
+  globalForJobs.__relicMemoryJobs ??
+  (globalForJobs.__relicMemoryJobs = new Map<string, StoredJobMeta>());
+
+const memoryAssets =
+  globalForJobs.__relicMemoryAssets ??
+  (globalForJobs.__relicMemoryAssets = new Map<string, Buffer>());
 
 const activeLocks = new Set<string>();
 
@@ -33,10 +51,20 @@ async function ensureJobsRoot(): Promise<void> {
 }
 
 export async function pruneExpiredJobs(): Promise<void> {
+  const now = Date.now();
+  for (const [jobId, entry] of memoryJobs.entries()) {
+    if (now - entry.updatedAtMs > JOB_TTL_MS) {
+      memoryJobs.delete(jobId);
+      for (const key of memoryAssets.keys()) {
+        if (key.startsWith(`${jobId}/`)) {
+          memoryAssets.delete(key);
+        }
+      }
+    }
+  }
   try {
     await ensureJobsRoot();
     const entries = await fs.readdir(JOBS_ROOT, { withFileTypes: true });
-    const now = Date.now();
     await Promise.all(
       entries
         .filter((e) => e.isDirectory())
@@ -56,7 +84,7 @@ export async function pruneExpiredJobs(): Promise<void> {
         })
     );
   } catch {
-    // Non-fatal
+    // Non-fatal on read-only container filesystems
   }
 }
 
@@ -137,6 +165,15 @@ function sanitizeId(id: string): string {
   return id;
 }
 
+function contentTypeForFilename(filename: string): string {
+  const ext = path.extname(filename).toLowerCase();
+  if (ext === ".glb") return "model/gltf-binary";
+  if (ext === ".png") return "image/png";
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  if (ext === ".webp") return "image/webp";
+  return "application/octet-stream";
+}
+
 export async function createJob(
   ownerSessionId: string,
   normalizedImageBuffer: Buffer,
@@ -144,13 +181,10 @@ export async function createJob(
 ): Promise<RestorationJob> {
   await pruneExpiredJobs();
   const id = `job_${crypto.randomBytes(12).toString("hex")}`;
-  const dir = path.join(JOBS_ROOT, id);
-  await fs.mkdir(dir, { recursive: true });
-
   const originalFilename = "original.png";
-  await fs.writeFile(path.join(dir, originalFilename), normalizedImageBuffer);
 
-  const now = new Date().toISOString();
+  const nowMs = Date.now();
+  const now = new Date(nowMs).toISOString();
   const job: RestorationJob = {
     id,
     createdAt: now,
@@ -165,14 +199,25 @@ export async function createJob(
 
   const stored: StoredJobMeta = {
     ownerSessionId,
+    updatedAtMs: nowMs,
     job,
   };
 
-  await fs.writeFile(
-    path.join(dir, "job.json"),
-    JSON.stringify(stored, null, 2),
-    "utf8"
-  );
+  memoryJobs.set(id, stored);
+  memoryAssets.set(`${id}/${originalFilename}`, normalizedImageBuffer);
+
+  try {
+    const dir = path.join(JOBS_ROOT, id);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, originalFilename), normalizedImageBuffer);
+    await fs.writeFile(
+      path.join(dir, "job.json"),
+      JSON.stringify(stored, null, 2),
+      "utf8"
+    );
+  } catch {
+    // Kept in-memory when container root is read-only
+  }
 
   return job;
 }
@@ -182,6 +227,11 @@ export async function getJobForSession(
   ownerSessionId: string
 ): Promise<RestorationJob | null> {
   const safeId = sanitizeId(jobId);
+  const mem = memoryJobs.get(safeId);
+  if (mem) {
+    return mem.ownerSessionId === ownerSessionId ? mem.job : null;
+  }
+
   const metaPath = path.join(JOBS_ROOT, safeId, "job.json");
   try {
     const raw = await fs.readFile(metaPath, "utf8");
@@ -189,6 +239,10 @@ export async function getJobForSession(
     if (parsed.ownerSessionId !== ownerSessionId) {
       return null;
     }
+    memoryJobs.set(safeId, {
+      ...parsed,
+      updatedAtMs: parsed.updatedAtMs ?? Date.now(),
+    });
     return parsed.job;
   } catch {
     return null;
@@ -202,24 +256,41 @@ export async function updateJobForSession(
 ): Promise<RestorationJob> {
   const safeId = sanitizeId(jobId);
   const metaPath = path.join(JOBS_ROOT, safeId, "job.json");
-  const raw = await fs.readFile(metaPath, "utf8");
-  const parsed = JSON.parse(raw) as StoredJobMeta;
+
+  let parsed = memoryJobs.get(safeId);
+  if (!parsed) {
+    const raw = await fs.readFile(metaPath, "utf8");
+    parsed = JSON.parse(raw) as StoredJobMeta;
+  }
   if (parsed.ownerSessionId !== ownerSessionId) {
     throw new Error("Unauthorized job access.");
   }
 
+  const nowMs = Date.now();
   const nextJob: RestorationJob = {
     ...parsed.job,
     ...patch,
     id: parsed.job.id,
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date(nowMs).toISOString(),
   };
 
-  await fs.writeFile(
-    metaPath,
-    JSON.stringify({ ownerSessionId, job: nextJob }, null, 2),
-    "utf8"
-  );
+  const nextStored: StoredJobMeta = {
+    ownerSessionId,
+    updatedAtMs: nowMs,
+    job: nextJob,
+  };
+  memoryJobs.set(safeId, nextStored);
+
+  try {
+    await fs.mkdir(path.join(JOBS_ROOT, safeId), { recursive: true });
+    await fs.writeFile(
+      metaPath,
+      JSON.stringify(nextStored, null, 2),
+      "utf8"
+    );
+  } catch {
+    // Kept in-memory when container root is read-only
+  }
 
   return nextJob;
 }
@@ -233,8 +304,6 @@ export async function writeJobAsset(
   if (!/^[a-zA-Z0-9._-]{3,80}$/.test(filename) || filename.includes("..")) {
     throw new Error("Invalid asset filename.");
   }
-  const dir = path.join(JOBS_ROOT, safeId);
-  await fs.mkdir(dir, { recursive: true });
 
   let outBuffer = buffer;
   if (filename.toLowerCase().endsWith(".glb")) {
@@ -245,7 +314,16 @@ export async function writeJobAsset(
     }
   }
 
-  await fs.writeFile(path.join(dir, filename), outBuffer);
+  memoryAssets.set(`${safeId}/${filename}`, outBuffer);
+
+  try {
+    const dir = path.join(JOBS_ROOT, safeId);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, filename), outBuffer);
+  } catch {
+    // Kept in-memory when container root is read-only
+  }
+
   return `/api/jobs/${safeId}/assets/${filename}`;
 }
 
@@ -265,21 +343,16 @@ export async function readJobAssetForSession(
   const job = await getJobForSession(safeId, ownerSessionId);
   if (!job) return null;
 
+  const memBuf = memoryAssets.get(`${safeId}/${filename}`);
+  if (memBuf) {
+    return { buffer: memBuf, contentType: contentTypeForFilename(filename) };
+  }
+
   const filePath = path.join(JOBS_ROOT, safeId, filename);
   try {
     const buffer = await fs.readFile(filePath);
-    const ext = path.extname(filename).toLowerCase();
-    const contentType =
-      ext === ".glb"
-        ? "model/gltf-binary"
-        : ext === ".png"
-          ? "image/png"
-          : ext === ".jpg" || ext === ".jpeg"
-            ? "image/jpeg"
-            : ext === ".webp"
-              ? "image/webp"
-              : "application/octet-stream";
-    return { buffer, contentType };
+    memoryAssets.set(`${safeId}/${filename}`, buffer);
+    return { buffer, contentType: contentTypeForFilename(filename) };
   } catch {
     return null;
   }
